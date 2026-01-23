@@ -87,8 +87,8 @@
         .his-photo {
             width: 200px;
             height: 200px;
-            /* Corrected File Name from your upload */
-            background-image: url('IMG_20260122_233447_756.jpg');
+            /* RENAME YOUR PHOTO TO photo.jpg */
+            background-image: url('photo.jpg');
             background-size: cover;
             background-position: center;
             border-radius: 50%;
@@ -106,6 +106,13 @@
     </style>
 </head>
 <body>
+
+    <audio id="bg-music" loop>
+        <source src="https://cdn.pixabay.com/download/audio/2022/03/09/audio_c8c9967676.mp3?filename=motivational-cinematic-piano-110867.mp3" type="audio/mpeg">
+    </audio>
+    <audio id="cheer-sound">
+        <source src="https://cdn.pixabay.com/download/audio/2021/08/04/audio_12b0c7443c.mp3?filename=crowd-cheering-143103.mp3" type="audio/mpeg">
+    </audio>
 
     <div id="stars-container"></div>
     <div id="balloons-container"></div>
@@ -144,8 +151,8 @@
 
     <script>
         // --- 1. CONFIGURATION ---
-        // Using backticks (`) to safely handle your quotes
-        const finalLetter ='Omryyyy yuyuu,
+        // NOTICE: I am using Backticks (`) below, not single quotes (')
+        const finalLetter = `Omryyyy yuyuu,
 
 Happy Birthday to the man who carries my heart in his hands. I’m trying to find the right words to tell you what you mean to me, but sometimes I love you just doesn't feel big enough. That’s why I’m so glad we have our own word.
 
@@ -159,7 +166,7 @@ No matter where we go or what we do, it will always be you.
 Amevia, now and forever. MUAAAH ❤️
 
 With all my love,
-Niny';
+Niny`;
 
         const startScreen = document.getElementById('start-screen');
         const cakeSection = document.getElementById('cake-section');
@@ -167,147 +174,9 @@ Niny';
         const flames = document.querySelectorAll('.flame');
         const instructionText = document.getElementById('instruction-text');
         const typewriterElement = document.getElementById('typewriter-text');
-
-        let audioContext, analyser, microphone;
-        let isListening = false;
-        let candlesBlown = false;
-        let blowStreak = 0; 
-
-        function createStars() {
-            const container = document.getElementById('stars-container');
-            for(let i=0; i<50; i++) {
-                const star = document.createElement('div');
-                star.className = 'star';
-                star.style.left = Math.random() * 100 + 'vw';
-                star.style.top = Math.random() * 100 + 'vh';
-                star.style.width = Math.random() * 3 + 'px';
-                star.style.height = star.style.width;
-                star.style.animationDelay = Math.random() * 2 + 's';
-                container.appendChild(star);
-            }
-        }
-        createStars();
-
-        function releaseBalloons() {
-            const container = document.getElementById('balloons-container');
-            const colors = ['#00a8ff', '#1a1a1a', '#005785'];
-            for(let i=0; i<15; i++) {
-                const balloon = document.createElement('div');
-                balloon.className = 'balloon';
-                balloon.style.left = Math.random() * 100 + 'vw';
-                balloon.style.backgroundColor = colors[Math.floor(Math.random()*colors.length)];
-                balloon.style.animationDuration = (Math.random() * 5 + 5) + 's';
-                balloon.style.animationDelay = Math.random() * 5 + 's';
-                container.appendChild(balloon);
-            }
-        }
-
-        // --- FIXED START LOGIC ---
-        startScreen.addEventListener('click', async () => {
-            // 1. Instantly hide the start screen so it doesn't feel frozen
-            startScreen.style.opacity = '0';
-            setTimeout(() => { 
-                startScreen.style.display = 'none';
-                cakeSection.style.opacity = '1';
-                cakeSection.style.pointerEvents = 'all';
-                
-                // 2. NOW we ask for the mic (after the screen has changed)
-                navigator.mediaDevices.getUserMedia({ audio: true })
-                .then(stream => {
-                    initializeAudio(stream);
-                })
-                .catch(err => {
-                    console.error("Mic denied:", err);
-                    alert("I need to hear you to blow the candles! Please refresh and allow Microphone access.");
-                });
-
-            }, 800);
-        });
-
-        function initializeAudio(stream) {
-            audioContext = new (window.AudioContext || window.webkitAudioContext)();
-            analyser = audioContext.createAnalyser();
-            microphone = audioContext.createMediaStreamSource(stream);
-            microphone.connect(analyser);
-            analyser.fftSize = 512;
-            isListening = true;
-            detectBlow();
-        }
-
-        function detectBlow() {
-            if (!isListening || candlesBlown) return;
-            const bufferLength = analyser.frequencyBinCount;
-            const dataArray = new Uint8Array(bufferLength);
-            analyser.getByteFrequencyData(dataArray);
-
-            let sum = 0;
-            let lowFreqCount = Math.floor(bufferLength / 2);
-            for(let i = 0; i < lowFreqCount; i++) { sum += dataArray[i]; }
-            let average = sum / lowFreqCount;
-
-            // Sensitivity threshold
-            if (average > 140) { blowStreak++; } else { blowStreak = 0; }
-
-            if (blowStreak > 5) {
-                celebrate();
-            } else {
-                requestAnimationFrame(detectBlow);
-            }
-        }
-
-        function celebrate() {
-            candlesBlown = true;
-            isListening = false;
-            
-            flames.forEach(f => f.classList.add('out'));
-            instructionText.innerText = "YAY! Happy Birthday!";
-            
-            confetti({ particleCount: 150, spread: 70, origin: { y: 0.6 }, colors: ['#00a8ff', '#ffffff', '#000000'] });
-
-            setTimeout(() => {
-                cakeSection.style.opacity = '0';
-                setTimeout(() => {
-                    cakeSection.style.display = 'none';
-                    letterSection.style.display = 'block';
-                    document.body.style.overflow = 'auto'; // Enable scrolling for the letter
-                    releaseBalloons();
-                    
-                    setTimeout(() => {
-                        letterSection.style.opacity = '1';
-                        typeWriter(); 
-                    }, 100);
-                }, 1000);
-            }, 2500);
-        }
-
-        let charIndex = 0;
-        function typeWriter() {
-            if (charIndex < finalLetter.length) {
-                const char = finalLetter.charAt(charIndex);
-                if(char === '\n') {
-                    typewriterElement.innerHTML += '<br>';
-                } else {
-                    typewriterElement.innerHTML += char;
-                }
-                charIndex++;
-                setTimeout(typeWriter, 50); 
-            } else {
-                typewriterElement.innerHTML += "<span class='cursor'></span>";
-            }
-        }
-    </script>
-</body>
-</html>
-
-        const startScreen = document.getElementById('start-screen');
-        const cakeSection = document.getElementById('cake-section');
-        const letterSection = document.getElementById('letter-section');
-        const flames = document.querySelectorAll('.flame');
-        const instructionText = document.getElementById('instruction-text');
         const bgMusic = document.getElementById('bg-music');
         const cheerSound = document.getElementById('cheer-sound');
-        const typewriterElement = document.getElementById('typewriter-text');
-        
+
         bgMusic.volume = 0.5;
         cheerSound.volume = 0.6;
 
@@ -347,17 +216,27 @@ Niny';
 
         startScreen.addEventListener('click', async () => {
             try {
-                bgMusic.play();
-                const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+                // Play music immediately on user gesture
+                bgMusic.play().catch(e => console.log("Audio prevented:", e));
+                
                 startScreen.style.opacity = '0';
                 setTimeout(() => { 
                     startScreen.style.display = 'none';
                     cakeSection.style.opacity = '1';
                     cakeSection.style.pointerEvents = 'all';
-                    initializeAudio(stream);
-                }, 1000);
+                    
+                    // Ask for mic after screen transition
+                    navigator.mediaDevices.getUserMedia({ audio: true })
+                    .then(stream => {
+                        initializeAudio(stream);
+                    })
+                    .catch(err => {
+                        console.error("Mic denied:", err);
+                        alert("I need to hear you to blow the candles! Please refresh and allow Microphone access.");
+                    });
+                }, 800);
             } catch (err) {
-                alert("Please allow microphone access for the magic to work!");
+                console.log(err);
             }
         });
 
@@ -398,7 +277,7 @@ Niny';
             flames.forEach(f => f.classList.add('out'));
             instructionText.innerText = "YAY! Happy Birthday!";
             
-            cheerSound.play();
+            cheerSound.play().catch(e => console.log(e));
             confetti({ particleCount: 150, spread: 70, origin: { y: 0.6 }, colors: ['#00a8ff', '#ffffff', '#000000'] });
 
             setTimeout(() => {
@@ -406,10 +285,7 @@ Niny';
                 setTimeout(() => {
                     cakeSection.style.display = 'none';
                     letterSection.style.display = 'block';
-                    
-                    // --- FIX FOR SCROLLING ---
-                    document.body.style.overflow = 'auto'; // UNLOCKS SCROLLING HERE!
-                    
+                    document.body.style.overflow = 'auto'; 
                     releaseBalloons();
                     
                     setTimeout(() => {
